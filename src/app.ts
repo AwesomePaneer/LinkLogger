@@ -1,6 +1,8 @@
 import * as express from 'express';
 import path = require('path');
 import linkMap from './models/link';
+import auth from './auth'
+const cookieParser = require('cookie-parser');
 
 // Create Express server.
 const app = express();
@@ -27,8 +29,9 @@ app.set('views', path.join(__dirname, '../../views'));
 
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
+app.use(cookieParser());
 
-app.get('/', (req, res) => {
+app.get('/', auth, (req, res) => {
   res.send('Link Logger is Active!');
 });
 
