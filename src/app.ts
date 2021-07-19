@@ -1,7 +1,9 @@
 import * as express from 'express';
 import path = require('path');
 import linkMap from './models/link';
-import auth from './auth'
+import auth from './auth';
+import User from './models/user';
+import {link} from 'fs';
 const cookieParser = require('cookie-parser');
 
 // Create Express server.
@@ -39,7 +41,8 @@ app.get('/link_generator', (req, res) => {
   res.render('link_generator');
 });
 
-app.post('/link_generator', (req, res) => {
+app.post('/link_generator', auth, (req, res) => {
+  const userData = res.locals.user;
   const original_link = req.body.original_link;
   const short_link = req.body.short_link;
   const link = new linkMap({
@@ -47,6 +50,23 @@ app.post('/link_generator', (req, res) => {
     original_link: original_link,
   });
   link.save();
+  // if(req.accepts('json')&&!req.accepts('html')){
+  //   res.json({success:true})
+  // }else{
+  //   res.render('link_generator')
+  // }
+
+  const query = {username: userData.username, email: userData.email};
+  const update = {$addToSet: {links: link}};
+
+  // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
+  // by default, you need to set it to false.
+  mongoose.set('useFindAndModify', false);
+  User.findOneAndUpdate(query, update, {upsert: true}, (err: any, doc: any) => {
+    if (err) return res.send(err);
+    console.log(doc);
+    return res.send('Succesfully saved.');
+  });
 });
 
 app.get('/redirect_to/:short_link', (req, res) => {
@@ -58,6 +78,22 @@ app.get('/redirect_to/:short_link', (req, res) => {
     res.status(301).redirect(str);
     res.end();
   });
+});
+
+app.get('/profile', auth, (req, res) => {
+  try {
+    const user = res.locals.user;
+    User.findOne({email: user.email}).then(async (result: typeof User) => {
+      const links_id = result.links;
+      const links: typeof linkMap[] = new Array(links_id.length);
+      for (let i = 0; i < links_id.length; i++) {
+        links[i] = await linkMap.findById(links_id[i]);
+      }
+      res.render('profile', {links: links});
+    });
+  } catch (JsonWebTokenError) {
+    res.render('<h1>Unauthorized</h1>');
+  }
 });
 
 app.set('view engine', 'ejs');

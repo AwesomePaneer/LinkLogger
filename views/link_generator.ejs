@@ -3,11 +3,28 @@
     <head>
         <title>Link Generator</title>
     </head>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <body>
         <form action="" method="post">
-            <input type="text" name="original_link" value="Original Link">
-            <input type="text" name="short_link" value="Short Link">
-            <button type="submit">Submit</button>
+            <input type="text" name="original_link" class="original_link"  value="Original Link">
+            <input type="text" name="short_link" class="short_link" value="Short Link">
+            <button type="submit" class="submit-btn">Submit</button>
         </form>
     </body>
+    <script>
+        const btn = document.querySelector('.submit-btn')
+        const original_link_field = document.querySelector('.original_link')
+        const short_link_field = document.querySelector('.short_link')
+        btn.addEventListener('click',async(e)=>{
+            
+            const original_link = original_link_field.value
+            const short_link = short_link_field.value
+
+            try{
+                const {data} = await axios.post('/link_generator',{original_link:original_link,short_link:short_link})
+            }catch(error){
+                console.log(error)
+            }
+        })
+    </script>
 </html>
