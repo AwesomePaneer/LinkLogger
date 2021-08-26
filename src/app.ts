@@ -54,6 +54,10 @@ app.post('/link_generator', auth, (req, res) => {
   const user = res.locals.user;
   const original_link = req.body.original_link;
   const short_link = req.body.short_link;
+  var format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/? ]+/;
+  if (format.test(short_link)) {
+    throw new Error('Spaces and special characters not allowed');
+  }
   //have to add user id to users array in link also
   const link = new linkMap({
     short_link: short_link,
@@ -359,9 +363,16 @@ app.post('/LinkTree/Create', auth, async (req, res) => {
     const userData = res.locals.user;
     const count = req.body.numberOfLinks;
     console.log('Count = ' + count);
+    var format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/? ]+/;
+    if (format.test(title)) {
+      throw new Error('Spaces and special characters not allowed');
+    }
     for (let index = 1; index <= count; index++) {
       const link_title = eval('req.body.link_title' + index);
       const original_link = eval('req.body.original_link' + index);
+      if (format.test(link_title)) {
+        throw new Error('Spaces and special characters not allowed');
+      }
       // const link = {link_title: link_title, original_link: original_link};
       const link = new linkMap({
         short_link: link_title,
